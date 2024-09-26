@@ -35,8 +35,15 @@ public:
 };
 
 int main(int argc, char* argv[])
-{  
-    float l = 25.;
+{
+    // 相机内参 f 和图像尺寸 width, height
+    int                   width      = 640;                          // 图像宽度
+    int                   height     = 480;                          // 图像高度
+    double                f          = 525.0;                        // 焦距
+    double                view_angle = 2.0 * atan2(height / 2.0, f); // 垂直视场角
+    std::array<double, 3> cam_pos    = {200, 0, 0};                  // 相机位置
+
+    float l = 25.; // 小球距离坐标原点的距离
     std::array<std::array<float, 7>, 7> spheres {
     //  x, y, z, r, g, b, radius
         0, 0, 0, 1, 0, 0, 8,
@@ -79,23 +86,9 @@ int main(int argc, char* argv[])
 
     // 获取并设置相机的位置和朝向  
     vtkCamera* camera = renderer->GetActiveCamera();
-    float p { 200 };
-    // 假设已知相机内参 fx, fy, cx, cy 和图像尺寸 width, height
-    int    width  = 640;           // 图像宽度
-    int    height = 480;           // 图像高度
-    double fx     = 525.0;         // 焦距x
-    double fy     = 525.0;         // 焦距y
-    double cx     = width / 2.0;   // 主点x
-    double cy     = height / 2.0;  // 主点y
-    camera->SetPosition(p, 0, p);  // 设置相机位置
-    camera->SetViewUp  (0, 0, 1);  // 设置相机的上方向向量
-    // 将主点坐标转换为窗口中心坐标
-    double wcx = -2 * (cx - double(width) / 2) / width;
-    double wcy = 2 * (cy - double(height) / 2) / height;
-    camera->SetWindowCenter(wcx, wcy);
-    // 将焦距转换为视场角
-    double view_angle = 2.0 * atan2(height / 2.0, fy) * 180.0 / vtkMath::Pi();
-    camera->SetViewAngle(view_angle);
+    camera->SetViewAngle(view_angle * 180.0 / vtkMath::Pi()); // 设置垂直视场角
+    camera->SetViewUp(0, 0, 1);                               // 设置相机的上方向向量
+    camera->SetPosition(cam_pos[0], cam_pos[1], cam_pos[2]);  // 设置相机位置
 
     // 创建一个渲染窗口
     vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
