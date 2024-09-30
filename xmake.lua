@@ -1,4 +1,4 @@
-﻿set_project("vtk_ball")
+﻿set_project("vtkball")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "build"})
 
 add_rules("mode.debug", "mode.release")
@@ -8,11 +8,11 @@ add_cxxflags("/EHsc") -- boost 需要
 add_requires(
     "vtk",
     "boost", {configs = {
-        program_options  = true,
-        }}
+                program_options  = true,
+             }}
 )
 
-target("vtk_ball")
+target("vtkball")
     set_rundir("$(projectdir)")
     add_packages(
         "vtk",
