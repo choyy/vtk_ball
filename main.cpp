@@ -23,7 +23,7 @@ VTK_MODULE_INIT(vtkInteractionStyle);
 #include <vtkCamera.h>  
 #include <vtkAxesActor.h>
 #include <vtkPNGWriter.h>  
-#include <vtkWindowToImageFilter.h>
+#include <vtkRenderLargeImage.h>
 
 class vtkMyCallback : public vtkCommand {
 public:
@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
         ("inputPose", po::value<std::vector<std::string>>(), "camera pose parameters")
         ("focalLength,f", po::value<float>()->default_value(500), "set focal length")
         ("length,l", po::value<float>()->default_value(50.), "set distance of ball to origin")
-        ("imageSize,s", po::value<std::string>()->default_value("1280x1024"), "set image size")
+        ("imageSize,s", po::value<std::string>()->default_value("640x480"), "set image size")
         ("showAxes,a", "show the axes")
         ("outputPath,o", po::value<std::string>()->default_value("img"), "set image output path");
     // 解析命令行参数
@@ -186,19 +186,18 @@ int main(int argc, char* argv[])
     // 创建一个渲染窗口
     vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
     renderWindow->AddRenderer(renderer);
-    renderWindow->SetOffScreenRendering(1); // 开启OffScreen渲染
     renderWindow->SetSize(width, height);   // 设置窗口大小
 
     // vtkMyCallback* mo1 = vtkMyCallback::New();
     // renderer->AddObserver(vtkCommand::StartEvent, mo1);
 
-    // 创建WindowToImageFilter
-    vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter = vtkSmartPointer<vtkWindowToImageFilter>::New();
-    windowToImageFilter->SetInput(renderWindow);
-    windowToImageFilter->Update();
+    // 使用vtkRenderLargeImage渲染，支持渲染超过屏幕大小的图像
+    vtkSmartPointer<vtkRenderLargeImage> renderLargeImage = vtkSmartPointer<vtkRenderLargeImage>::New();
+    renderLargeImage->SetInput(renderer);
+    renderLargeImage->Update();
     // 创建writer，这里以PNG格式为例
     vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
-    writer->SetInputConnection(windowToImageFilter->GetOutputPort()); // 设置输入连接
+    writer->SetInputConnection(renderLargeImage->GetOutputPort()); // 设置输入连接
 
     std::filesystem::path outpath(output_path); // 输出路径
     if (!std::filesystem::exists(outpath)) {    // 检查路径是否存在
@@ -215,7 +214,7 @@ int main(int argc, char* argv[])
                 renderWindow->Render();
 
                 static int idx = 0;
-                windowToImageFilter->Modified(); // 更新输出图片显示，如果不调用这个输出图片不会变化
+                renderLargeImage->Modified(); // 更新输出图片显示，如果不调用这个输出图片不会变化
                 auto img_path = outpath / std::string(std::to_string(idx++) + ".png");
                 std::cout << img_path.string() << " " << zi << " " << ei << " " << ai << std::endl;
                 pose_file << img_path.string() << " " << zi << " " << ei << " " << ai << std::endl;
