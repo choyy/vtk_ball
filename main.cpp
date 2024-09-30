@@ -186,7 +186,13 @@ int main(int argc, char* argv[])
     // 创建一个渲染窗口
     vtkSmartPointer<vtkRenderWindow> renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
     renderWindow->AddRenderer(renderer);
-    renderWindow->SetSize(width, height);   // 设置窗口大小
+    int magnification = 1; // 设置渲染窗口的放大倍数
+    if (height > 720) {    // 如果高度大于720，则将窗口大小缩小一半
+        magnification = 2;
+        renderWindow->SetSize(width / 2, height / 2); // 设置窗口大小
+    } else {
+        renderWindow->SetSize(width, height); // 设置窗口大小
+    }
 
     // vtkMyCallback* mo1 = vtkMyCallback::New();
     // renderer->AddObserver(vtkCommand::StartEvent, mo1);
@@ -194,6 +200,7 @@ int main(int argc, char* argv[])
     // 使用vtkRenderLargeImage渲染，支持渲染超过屏幕大小的图像
     vtkSmartPointer<vtkRenderLargeImage> renderLargeImage = vtkSmartPointer<vtkRenderLargeImage>::New();
     renderLargeImage->SetInput(renderer);
+    renderLargeImage->SetMagnification(magnification); // 设置图片相对渲染窗口的放大倍数
     renderLargeImage->Update();
     // 创建writer，这里以PNG格式为例
     vtkSmartPointer<vtkPNGWriter> writer = vtkSmartPointer<vtkPNGWriter>::New();
